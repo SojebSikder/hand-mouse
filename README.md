@@ -1,1 +1,2 @@
-# hand-mouse
+# Description
+hand-tracking-based mouse control system using OpenCV, MediaPipe, and PyAutoGUI. It moves the cursor based on the index finger's position and clicks when the index finger and thumb come close together.
