@@ -6,13 +6,16 @@ import numpy as np
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
-hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.7)
+hands = mp_hands.Hands(min_detection_confidence=0.7,
+                       min_tracking_confidence=0.7)
 
 # Get screen size
 screen_width, screen_height = pyautogui.size()
 
 # Open the webcam
 cap = cv2.VideoCapture(0)
+# Initialize previous cursor position for smoothing
+prev_x, prev_y = 0, 0
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -36,12 +39,13 @@ while cap.isOpened():
             # Convert normalized coordinates to screen coordinates
             x = int(index_finger.x * w)
             y = int(index_finger.y * h)
-
             screen_x = np.interp(x, [0, w], [0, screen_width])
             screen_y = np.interp(y, [0, h], [0, screen_height])
 
-            # Move the mouse cursor
-            pyautogui.moveTo(screen_x, screen_y, duration=0.1)
+            # Apply smoothing for cursor movement
+            prev_x = (prev_x * 0.8) + (screen_x * 0.2)
+            prev_y = (prev_y * 0.8) + (screen_y * 0.2)
+            pyautogui.moveTo(prev_x, prev_y, duration=0.1)
 
             # Calculate Euclidean distance between index finger tip and thumb tip
             thumb_x = int(thumb_finger.x * w)
@@ -53,11 +57,12 @@ while cap.isOpened():
                 pyautogui.click()
 
             # Draw landmarks on hand
-            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            mp_draw.draw_landmarks(frame, hand_landmarks,
+                                   mp_hands.HAND_CONNECTIONS)
 
     # Display the frame
     cv2.imshow("Hand Tracking", frame)
-    
+
     # Exit on pressing 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
